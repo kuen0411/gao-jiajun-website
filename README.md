@@ -6,6 +6,10 @@
 
 在專案根目錄執行 `python -m http.server 8000`，再開啟 `http://localhost:8000/`。
 
+## 商品與服務型錄
+
+從個人網站的「商品與服務」導覽或實作案例區進入 `catalog/`。型錄保留六項服務的篩選、詳情、互動流程與詢問內容複製功能；返回個人網站的連結使用相對路徑。內容在 `catalog/assets/main.js`，插圖在 `catalog/assets/`。
+
 ## GitHub Pages
 
 將儲存庫的 `main` 分支作為來源，在 **Settings → Pages → Build and deployment** 選擇 **Deploy from a branch**、`main`、`/ (root)`。網站網址為 `https://<帳號>.github.io/<儲存庫名稱>/`。
