@@ -1,6 +1,6 @@
 # 高嘉駿個人形象網站
 
-靜態單頁網站，介紹 AI 實務教學、系統整合、工作方法與專案。使用原生 HTML、CSS、JavaScript，無需建置工具。
+靜態單頁網站，介紹 AI 實務教學、系統整合、工作方法與專案。使用原生 HTML、CSS、JavaScript，無需建置工具。首屏與案例展開使用本機 GSAP 3.13.0 和 ScrollTrigger。
 
 ## 本機預覽
 
@@ -8,7 +8,7 @@
 
 ## 商品與服務型錄
 
-從個人網站的「商品與服務」導覽或實作案例區進入 `catalog/`。型錄保留六項服務的篩選、詳情、互動流程與詢問內容複製功能；返回個人網站的連結使用相對路徑。內容在 `catalog/assets/main.js`，插圖在 `catalog/assets/`。
+從個人網站的「商品與服務」導覽或實作案例區進入 `catalog/`。型錄提供展覽與索引兩種瀏覽方式，保留六項服務的篩選、詳情、互動流程與詢問內容複製功能；返回個人網站的連結使用相對路徑。內容在 `catalog/assets/main.js`，插圖在 `catalog/assets/`。
 
 ## GitHub Pages
 
@@ -17,8 +17,15 @@
 ## 維護
 
 - 內容與結構：`index.html`
+- 共用樣式：`assets/theme.css`
 - 視覺樣式與響應式版型：`assets/style.css`
 - 互動邏輯：`assets/main.js`
 - 人像與網站圖示：`assets/portrait.png`、`assets/favicon.svg`
 
-聯絡電話與 LINE 號碼會顯示在公開網站；變更聯絡資料時，需同步檢查 HTML 與 JavaScript 中的內容。
+聯絡電話與 LINE 號碼會顯示在公開網站。變更資料時，請同步檢查首頁的顯示文字、電話連結與複製值。
+
+## 瀏覽器回歸
+
+有 Playwright 時，可在專案根目錄執行 `node tests/redesign.browser.cjs`。也可以用 `PORTFOLIO_PLAYWRIGHT` 指向既有的 Playwright 模組，並以 `PORTFOLIO_CHROME` 指定 Chrome。設定 `PORTFOLIO_SHOTS` 可輸出截圖。
+
+`assets/vendor/` 的 GSAP 3.13.0 和 ScrollTrigger 保留原始授權標頭。參見 [GSAP 授權](https://gsap.com/standard-license/)。
