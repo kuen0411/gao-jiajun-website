@@ -183,10 +183,11 @@ dialog h2 { font: 770 clamp(1.7rem, 4vw, 3.25rem)/1.13 var(--type); letter-spaci
   .catalog-brand { font-size: .85rem; gap: .45em; }
   .catalog-symbol { font-size: 1.2rem; }
   .personal-link { font-size: .73rem; }
-  .catalog-toolbar { gap: 5px; }
+  .catalog-toolbar { gap: 9px; }
+  .intro-count { display: none; }
   .filters, .catalog-modes { gap: 3px; }
   .filter, .catalog-modes button { font-size: .74rem; padding: .44em .56em; }
-  [data-layout="gallery"] .product-grid { --print-width: 74vw; }
+  [data-layout="gallery"] .product-grid { --print-width: 100%; gap: 16px; }
   [data-layout="index"] .product-card { grid-template-columns: minmax(85px, 34%) minmax(0, 1fr); gap: 9px 12px; }
   [data-layout="index"] .card-action { grid-column: 2; padding-top: 0; }
   [data-layout="index"] .product-card h2 { font-size: 1.16rem; }

@@ -49,6 +49,7 @@
       project.style.setProperty('--visibility', selected ? '1' : '.72');
       link.setAttribute('aria-label', (gallery && !selected ? '移到 ' : '開啟 ') + name);
       link.setAttribute('aria-haspopup', gallery && !selected ? 'false' : 'dialog');
+      link.tabIndex = gallery && !selected ? -1 : 0;
       jumpButtons[index].setAttribute('aria-pressed', String(selected));
     });
     $('.gallery-position', exhibit).textContent = String(current + 1).padStart(2, '0') + ' / 03';
@@ -288,13 +289,17 @@
 
   if (motion) {
     if (window.ScrollTrigger) motion.registerPlugin(window.ScrollTrigger);
-    motion.matchMedia().add('(prefers-reduced-motion: no-preference)', () => {
+    motion.matchMedia().add({
+      animate: '(prefers-reduced-motion: no-preference)',
+      desktop: '(min-width: 761px)'
+    }, ({ conditions }) => {
+      if (!conditions.animate) return;
       motion.timeline({ defaults: { ease: 'power3.out' } })
         .from('.portrait-shell', { y: 32, autoAlpha: .58, duration: 1.05 }, 0)
         .from('.hero-name > *', { yPercent: 36, autoAlpha: 0, duration: .83, stagger: .11 }, .19)
         .from('.hero-role, .hero-caption', { y: 8, autoAlpha: 0, duration: .47, stagger: .06 }, .51);
 
-      if (window.ScrollTrigger) {
+      if (conditions.desktop && window.ScrollTrigger) {
         motion.to('.hero-photo', {
           y: 100, ease: 'none',
           scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true }

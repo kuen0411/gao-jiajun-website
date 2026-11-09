@@ -129,12 +129,19 @@ async function run() {
 
     await menu.locator('summary').click();
     await menu.locator('[data-contact]').click();
-    const copy = page.locator('.contact-dialog [data-copy]');
-    await copy.click();
-    await page.waitForFunction(() => document.querySelector('.contact-dialog .toast')?.textContent.includes('已複製'));
-    assert.equal(await page.evaluate(() => navigator.clipboard.readText()), await copy.getAttribute('data-copy'));
+    const line = 'https://line.me/ti/p/6uurTkyff9';
+    assert.equal(await page.locator('.contact-dialog a', { hasText: 'LINE 加好友' }).getAttribute('href'), line);
     await page.keyboard.press('Escape');
     await page.waitForFunction(() => document.querySelector('.mobile-menu summary') === document.activeElement);
+
+    const copy = page.locator('#contact [data-copy]');
+    await copy.click();
+    await page.waitForFunction(() => document.querySelector('.toast').textContent.includes('已複製'));
+    assert.equal(await page.evaluate(() => navigator.clipboard.readText()), await copy.getAttribute('data-copy'));
+    await page.route(line, route => route.fulfill({ body: 'LINE' }));
+    await page.locator('#contact a', { hasText: 'LINE 加好友' }).click();
+    await page.waitForURL(line);
+    await page.goto(home);
 
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.locator('.desktop-nav a[href="catalog/"]').click();
