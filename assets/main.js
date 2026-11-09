@@ -1,16 +1,310 @@
 
-(()=>{'use strict';const $=(s,ctx=document)=>ctx.querySelector(s);const $$=(s,ctx=document)=>Array.from(ctx.querySelectorAll(s));const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-const nav=$('#nav'),prog=$('#progress'),hero=$('#top'),geo=$('#heroGeo'),photo=$('#heroPhoto');let scrollTick=false;
-function onScroll(){scrollTick=false;const y=window.scrollY,max=document.documentElement.scrollHeight-innerHeight;prog.style.width=(max>0?y/max*100:0)+'%';nav.classList.toggle('scrolled',y>35);if(!reduce){const h=Math.min(y,850);geo.style.setProperty('--scroll-hero',(h*.15)+'px');photo.style.setProperty('--parallax-y',(h*.095)+'px')}updateStory()}
-window.addEventListener('scroll',()=>{if(!scrollTick){scrollTick=true;requestAnimationFrame(onScroll)}},{passive:true});
-if(!reduce&&window.matchMedia('(pointer:fine)').matches){hero.addEventListener('pointermove',e=>{if(window.scrollY>750)return;const x=(e.clientX/innerWidth-.5)*-15;photo.style.setProperty('--parallax-x',x+'px')})}
-const steps=$$('.storyStep'),nodes=$$('.orbitNode'),texts=['理解','設計','交付'],subtexts=['DISCOVER','DESIGN','DELIVER'];let currentStory=-1;
-function updateStory(){let idx=0,best=Infinity;const target=innerHeight*.57;steps.forEach((s,i)=>{const r=s.getBoundingClientRect(),center=(r.top+r.bottom)/2,dist=Math.abs(center-target);if(dist<best){best=dist;idx=i}});if(idx!==currentStory){currentStory=idx;steps.forEach((s,i)=>s.classList.toggle('active',i===idx));nodes.forEach((n,i)=>n.classList.toggle('active',i===idx));$('#orbitText').textContent=texts[idx];$('#orbitSub').textContent=subtexts[idx]}const sy=$('#method').getBoundingClientRect(),p=Math.min(1,Math.max(0,-sy.top/(sy.height-innerHeight||1)));$('#storyOrbit').style.setProperty('--story-progress',p.toFixed(3))}
-if('IntersectionObserver'in window){const io=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');io.unobserve(e.target)}}),{threshold:.12});$$('.reveal').forEach(el=>io.observe(el))}else{$$('.reveal').forEach(el=>el.classList.add('visible'))}
-const menuBtn=$('#menuBtn'),mobileNav=$('#mobileNav');function setMenu(open){mobileNav.classList.toggle('open',open);menuBtn.setAttribute('aria-expanded',open);menuBtn.setAttribute('aria-label',open?'關閉導覽選單':'開啟導覽選單')}menuBtn.addEventListener('click',()=>setMenu(!mobileNav.classList.contains('open')));$$('a',mobileNav).forEach(a=>a.addEventListener('click',()=>setMenu(false)));
-const scenarios=[{tag:'PERSONAL WORK',title:'把待辦事項，<br>變成每日工作節奏。',desc:'先整理資訊，再根據優先順序安排工作，最後留下能追蹤的交付紀錄。',steps:['蒐集並整理零散資訊','判斷優先順序與工作節點','輸出可執行的任務清單'],sat:['資料整理','優先順序','每日清單']},{tag:'CONTENT CREATION',title:'從一個主題，<br>走到完整內容企劃。',desc:'把模糊的靈感拆成受眾、訊息、素材與發布步驟，減少重複修改。',steps:['釐清目標客群與內容角度','拆成腳本、視覺與文案任務','校稿並整理發布流程'],sat:['定位','腳本','素材']},{tag:'TEAM OPERATIONS',title:'讓團隊不再<br>靠訊息追進度。',desc:'建立任務交辦、責任歸屬與檢查機制，協助團隊維持一致的工作節奏。',steps:['定義角色與協作責任','安排工作交接與審核節點','追蹤結果與待改善問題'],sat:['角色','協作','回報']}];
-let activeTab=0;function setTab(i){activeTab=i;const s=scenarios[i];$$('.labTab').forEach((b,j)=>{b.classList.toggle('active',i===j);b.setAttribute('aria-pressed',String(i===j))});$('#screenTag').textContent=s.tag;$('#screenIndex').textContent='SCENARIO 0'+(i+1);$('#screenTitle').innerHTML=s.title;$('#screenDesc').textContent=s.desc;$('#stepList').innerHTML=s.steps.map((t,j)=>`<div class="stepLine"><i class="fine">0${j+1}</i><span>${t}</span></div>`).join('');['A','B','C'].forEach((v,j)=>$('#sat'+v).textContent=s.sat[j]);$$('#screenFooter span').forEach((e,j)=>e.classList.toggle('active',i===j));const d=$('.screenDiagram');if(!reduce){d.animate([{opacity:.55,transform:'scale(.96)'},{opacity:1,transform:'scale(1)'}],{duration:460,easing:'ease-out'})}}$$('.labTab').forEach(b=>b.addEventListener('click',()=>setTab(Number(b.dataset.tab))));setTab(0);
-const cases={argo:{kicker:'SYSTEM / AGENT WORKFLOW',title:'ARGO｜AI 一人公司',desc:'這是持續迭代的多角色 AI 工作方式，目標是讓任務不只停留在對話，還能經過拆解、協作、檢查與交付。',rows:[['核心方向','多角色工作、任務路由、審核機制'],['應用情境','內容、生產力、專案管理與自動化'],['展示狀態','系統概念與流程展示；非對外公開完整部署']]},commerce:{kicker:'PRODUCT / BUSINESS OPERATIONS',title:'ARGO Commerce OS',desc:'針對電商合作與營運管理所規劃的管理系統，以合作對象、平台帳號、任務追蹤、營運紀錄與權責協調為核心。',rows:[['服務對象','號主、店主與第三方管理方'],['設計重點','CRM、營運可見性與責任追蹤'],['展示狀態','互動展示及持續優化中的專案']]},course:{kicker:'EDUCATION / HANDS-ON LEARNING',title:'AI 實務課程與工作坊',desc:'以「學員自己做得出來」為核心，從基礎理解到任務拆解、提示詞與工作流程，逐步引導實際操作。',rows:[['教學形式','新手入門、工作坊、實際操作'],['課程主題','AI 助理、工作流程、個人品牌與商業應用'],['教學原則','以實作成果與學員理解為優先']]}};
-const overlay=$('#modalOverlay'),modal=$('.modal'),closeBtn=$('#modalClose');let lastFocus=null;function showModal(data){lastFocus=document.activeElement;$('#modalKicker').textContent=data.kicker;$('#modalTitle').textContent=data.title;$('#modalDesc').textContent=data.desc;$('#modalList').innerHTML=data.rows.map(([a,b])=>`<div class="modalRow"><span>${a}</span><strong>${b}</strong></div>`).join('');overlay.classList.add('open');document.body.style.overflow='hidden';closeBtn.focus()};function closeModal(){overlay.classList.remove('open');document.body.style.overflow='';lastFocus?.focus?.()};$$('[data-case]').forEach(c=>{const open=()=>showModal(cases[c.dataset.case]);c.addEventListener('click',open);c.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open()}})});$$('[data-contact]').forEach(b=>b.addEventListener('click',()=>{setMenu(false);showModal({kicker:'CONNECT / GAO JIAJUN',title:'從你的需求開始聊。',desc:'如果你正在規劃 AI 課程、想改善既有工作流程，或需要討論系統整合，可以透過以下方式聯絡我。',rows:[['電話','0930 372 572'],['LINE 聯絡號碼','0979 812 236'],['合作方向','AI 實務課程・工作流程・系統整合']]})}));closeBtn.addEventListener('click',closeModal);overlay.addEventListener('click',e=>{if(e.target===overlay)closeModal()});document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(overlay.classList.contains('open'))closeModal();setMenu(false)}else if(e.key==='Tab'&&overlay.classList.contains('open')){const f=Array.from(modal.querySelectorAll('button,[href]')).filter(el=>!el.disabled);if(e.shiftKey&&document.activeElement===f[0]){e.preventDefault();f.at(-1).focus()}else if(!e.shiftKey&&document.activeElement===f.at(-1)){e.preventDefault();f[0].focus()}}});$('#modalAction').addEventListener('click',()=>{closeModal();$('#contact').scrollIntoView({behavior:reduce?'auto':'smooth'})});
-let toastTimer;function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2500)}$$('[data-copy]').forEach(b=>b.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(b.dataset.copy);toast('已複製 '+b.dataset.copy)}catch(e){const tmp=document.createElement('textarea');tmp.value=b.dataset.copy;document.body.appendChild(tmp);tmp.select();try{document.execCommand('copy');toast('已複製 '+b.dataset.copy)}catch(err){toast('聯絡號碼：'+b.dataset.copy)}tmp.remove()}}));$('#backTop').addEventListener('click',()=>window.scrollTo({top:0,behavior:reduce?'auto':'smooth'}));onScroll();
+(() => {
+  'use strict';
+
+  const $ = (selector, root = document) => root.querySelector(selector);
+  const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+  const motion = window.gsap;
+  const menu = $('.mobile-menu');
+
+  menu.addEventListener('click', event => {
+    if (event.target.closest('a')) menu.open = false;
+  });
+  menu.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && menu.open) {
+      event.preventDefault();
+      menu.open = false;
+      $('summary', menu).focus();
+    }
+  });
+
+  const exhibit = $('.exhibit');
+  const stage = $('.project-stage');
+  const projects = $$('.project', stage);
+  const modeButtons = $$('[data-view-choice]', exhibit);
+  const jumpButtons = $$('[data-jump]', exhibit);
+  const caseDialog = $('.case-dialog');
+  const contactDialog = $('.contact-dialog');
+  let current = 0;
+  let caseAnimation;
+  let returnFocus;
+  let touchStart;
+  let lastSwipe = -Infinity;
+
+  function renderGallery(next, announce = false) {
+    current = (next + projects.length) % projects.length;
+    const gallery = exhibit.dataset.view === 'gallery';
+    projects.forEach((project, index) => {
+      const distance = (index - current + projects.length) % projects.length;
+      const offset = distance > 1 ? distance - projects.length : distance;
+      const selected = index === current;
+      const link = $('.project-open', project);
+      const name = $('h3', project).textContent;
+
+      project.classList.toggle('is-current', selected);
+      project.style.setProperty('--offset', offset);
+      project.style.setProperty('--layer', selected ? '2' : '1');
+      project.style.setProperty('--scale', selected ? '1' : '.92');
+      project.style.setProperty('--visibility', selected ? '1' : '.72');
+      link.setAttribute('aria-label', (gallery && !selected ? '移到 ' : '開啟 ') + name);
+      link.setAttribute('aria-haspopup', gallery && !selected ? 'false' : 'dialog');
+      link.tabIndex = gallery && !selected ? -1 : 0;
+      jumpButtons[index].setAttribute('aria-pressed', String(selected));
+    });
+    $('.gallery-position', exhibit).textContent = String(current + 1).padStart(2, '0') + ' / 03';
+    if (announce) $('#gallery-status').textContent = '目前展示 ' + $('h3', projects[current]).textContent;
+  }
+
+  function setView(view) {
+    exhibit.dataset.view = view;
+    $('.gallery-controls', exhibit).hidden = view !== 'gallery';
+    stage.tabIndex = view === 'gallery' ? 0 : -1;
+    modeButtons.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.viewChoice === view)));
+    renderGallery(current);
+  }
+
+  function openCase(link) {
+    const project = link.closest('.project');
+    const transcript = document.getElementById('case-' + link.dataset.case);
+    const source = $('img', link);
+    const sourceBox = link.getBoundingClientRect();
+    const media = $('.case-dialog-media');
+    const image = $('img', media);
+
+    $('#case-label').textContent = $('.project-text .label', project).textContent;
+    $('#case-title').textContent = $('summary', transcript).textContent;
+    $('#case-body').replaceChildren(...Array.from(transcript.children).slice(1).map(child => child.cloneNode(true)));
+    image.src = source.currentSrc || source.src;
+    image.alt = source.alt;
+    media.style.backgroundColor = project.style.getPropertyValue('--case-tone');
+    returnFocus = link;
+    caseDialog.showModal();
+    caseDialog.scrollTop = 0;
+
+    if (motion && !reduced.matches) {
+      const destination = media.getBoundingClientRect();
+      caseAnimation = motion.timeline();
+      caseAnimation.fromTo(media, {
+        x: sourceBox.left - destination.left,
+        y: sourceBox.top - destination.top,
+        scaleX: sourceBox.width / destination.width,
+        scaleY: sourceBox.height / destination.height,
+        borderRadius: 16
+      }, {
+        x: 0, y: 0, scaleX: 1, scaleY: 1, borderRadius: 0, duration: .62, ease: 'power3.inOut',
+        clearProps: 'transform,borderRadius'
+      }).fromTo('.case-dialog-text', { y: 18, opacity: .4 }, {
+        y: 0, opacity: 1, duration: .38, clearProps: 'transform,opacity'
+      }, .32);
+    }
+  }
+
+  projects.forEach((project, index) => {
+    const link = $('.project-open', project);
+    link.addEventListener('click', event => {
+      event.preventDefault();
+      if (performance.now() - lastSwipe < 400) return;
+      if (exhibit.dataset.view === 'gallery' && index !== current) renderGallery(index, true);
+      else openCase(link);
+    });
+    link.addEventListener('keydown', event => {
+      if (event.key === ' ') {
+        event.preventDefault();
+        link.click();
+      }
+    });
+  });
+  modeButtons.forEach(button => button.addEventListener('click', () => setView(button.dataset.viewChoice)));
+  jumpButtons.forEach(button => button.addEventListener('click', () => renderGallery(Number(button.dataset.jump), true)));
+  $$('[data-shift]', exhibit).forEach(button => button.addEventListener('click', () => {
+    renderGallery(current + Number(button.dataset.shift), true);
+  }));
+  stage.addEventListener('keydown', event => {
+    if (exhibit.dataset.view !== 'gallery' || !['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+    event.preventDefault();
+    renderGallery(current + (event.key === 'ArrowRight' ? 1 : -1), true);
+    if (event.target.matches('.project-open')) $('.project-open', projects[current]).focus({ preventScroll: true });
+  });
+  stage.addEventListener('touchstart', event => {
+    const touch = event.touches[0];
+    touchStart = event.touches.length === 1 ? [touch.clientX, touch.clientY] : undefined;
+  }, { passive: true });
+  stage.addEventListener('touchend', event => {
+    if (!touchStart || exhibit.dataset.view !== 'gallery') return;
+    const touch = event.changedTouches[0];
+    const dx = touch.clientX - touchStart[0];
+    const dy = touch.clientY - touchStart[1];
+    touchStart = undefined;
+    if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.35) {
+      lastSwipe = performance.now();
+      renderGallery(current + (dx < 0 ? 1 : -1), true);
+    }
+  }, { passive: true });
+  stage.addEventListener('touchcancel', () => { touchStart = undefined; });
+  $$('.case-transcript', exhibit).forEach(detail => { detail.hidden = true; });
+  $('.gallery-modes', exhibit).hidden = false;
+  setView('gallery');
+
+  function focusContact() {
+    $('#contact-title').focus({ preventScroll: true });
+    $('#contact').scrollIntoView({ behavior: reduced.matches ? 'instant' : 'smooth' });
+  }
+
+  caseDialog.addEventListener('close', () => {
+    caseAnimation?.progress(1).kill();
+    caseAnimation = undefined;
+    returnFocus?.focus({ preventScroll: true });
+    returnFocus = undefined;
+  });
+  $('#case-contact').addEventListener('click', event => {
+    event.preventDefault();
+    returnFocus = undefined;
+    caseDialog.close();
+    history.replaceState(null, '', '#contact');
+    focusContact();
+  });
+
+  $$('[data-contact]').forEach(link => link.addEventListener('click', event => {
+    event.preventDefault();
+    returnFocus = link.closest('.mobile-menu') ? $('summary', menu) : link;
+    menu.open = false;
+    contactDialog.showModal();
+  }));
+  contactDialog.addEventListener('click', event => {
+    if (event.target !== contactDialog) return;
+    const bounds = contactDialog.getBoundingClientRect();
+    if (event.clientX < bounds.left || event.clientX > bounds.right ||
+        event.clientY < bounds.top || event.clientY > bounds.bottom) contactDialog.close();
+  });
+  contactDialog.addEventListener('close', () => {
+    returnFocus?.focus({ preventScroll: true });
+    returnFocus = undefined;
+  });
+
+  const scenarios = [
+    {
+      tag: 'PERSONAL WORK',
+      title: '把待辦事項，變成每日工作節奏。',
+      description: '先整理資訊，再根據優先順序安排工作，最後留下能追蹤的交付紀錄。',
+      steps: [
+        ['資料整理', '蒐集並整理零散資訊'],
+        ['優先順序', '判斷優先順序與工作節點'],
+        ['每日清單', '輸出可執行的任務清單']
+      ]
+    },
+    {
+      tag: 'CONTENT CREATION',
+      title: '從一個主題，走到完整內容企劃。',
+      description: '把模糊的靈感拆成受眾、訊息、素材與發布步驟，減少重複修改。',
+      steps: [
+        ['定位', '釐清目標客群與內容角度'],
+        ['腳本', '拆成腳本、視覺與文案任務'],
+        ['素材', '校稿並整理發布流程']
+      ]
+    },
+    {
+      tag: 'TEAM OPERATIONS',
+      title: '讓團隊不再靠訊息追進度。',
+      description: '建立任務交辦、責任歸屬與檢查機制，協助團隊維持一致的工作節奏。',
+      steps: [
+        ['角色', '定義角色與協作責任'],
+        ['協作', '安排工作交接與審核節點'],
+        ['回報', '追蹤結果與待改善問題']
+      ]
+    }
+  ];
+
+  const scenarioButtons = $$('[data-scenario]');
+  const exerciseNext = $('#exercise-next');
+  const scenarioSteps = $('#scenario-steps');
+  let activeStep = 0;
+
+  function setStep(index) {
+    const entries = Array.from(scenarioSteps.children);
+    activeStep = index % entries.length;
+    entries.forEach((entry, i) => {
+      if (i === activeStep) entry.setAttribute('aria-current', 'step');
+      else entry.removeAttribute('aria-current');
+    });
+    exerciseNext.firstChild.textContent = activeStep === entries.length - 1 ? '從頭再走 ' : '走下一步 ';
+    $('#exercise-status').textContent = '第 ' + (activeStep + 1) + ' 步，' + entries[activeStep].textContent;
+  }
+
+  function setScenario(index) {
+    const scenario = scenarios[index];
+    scenarioButtons.forEach((button, i) => button.setAttribute('aria-pressed', String(i === index)));
+    $('#scenario-type').textContent = scenario.tag;
+    $('#scenario-title').textContent = scenario.title;
+    $('#scenario-description').textContent = scenario.description;
+    scenarioSteps.replaceChildren(...scenario.steps.map(([label, description]) => {
+      const step = document.createElement('li');
+      const words = document.createElement('span');
+      const tag = document.createElement('small');
+      tag.textContent = label;
+      words.append(tag, description);
+      step.append(words);
+      return step;
+    }));
+    setStep(0);
+  }
+
+  scenarioButtons.forEach((button, index) => button.addEventListener('click', () => setScenario(index)));
+  exerciseNext.addEventListener('click', () => setStep(activeStep + 1));
+  $('.scenarios').hidden = false;
+  $('.exercise-tools').hidden = false;
+  setScenario(0);
+
+  const toast = $('.toast');
+  let toastTimer;
+
+  async function copyText(value, trigger) {
+    try {
+      await navigator.clipboard.writeText(value);
+      return true;
+    } catch {
+      const field = document.createElement('textarea');
+      field.value = value;
+      field.className = 'sr-only';
+      (trigger.closest('dialog[open]') || document.body).append(field);
+      field.select();
+      try { return document.execCommand('copy'); }
+      catch { return false; }
+      finally {
+        field.remove();
+        trigger.focus({ preventScroll: true });
+      }
+    }
+  }
+
+  $$('[data-copy]').forEach(button => button.addEventListener('click', async () => {
+    const value = button.dataset.copy;
+    const copied = await copyText(value, button);
+    (button.closest('dialog[open]') || document.body).append(toast);
+    toast.textContent = (copied ? '已複製 ' : '聯絡號碼 ') + value;
+    toast.classList.add('is-visible');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('is-visible'), 2600);
+  }));
+
+  if (motion) {
+    if (window.ScrollTrigger) motion.registerPlugin(window.ScrollTrigger);
+    motion.matchMedia().add({
+      animate: '(prefers-reduced-motion: no-preference)',
+      desktop: '(min-width: 761px)'
+    }, ({ conditions }) => {
+      if (!conditions.animate) return;
+      motion.timeline({ defaults: { ease: 'power3.out' } })
+        .from('.portrait-shell', { y: 32, autoAlpha: .58, duration: 1.05 }, 0)
+        .from('.hero-name > *', { yPercent: 36, autoAlpha: 0, duration: .83, stagger: .11 }, .19)
+        .from('.hero-role, .hero-caption', { y: 8, autoAlpha: 0, duration: .47, stagger: .06 }, .51);
+
+      if (conditions.desktop && window.ScrollTrigger) {
+        motion.to('.hero-photo', {
+          y: 100, ease: 'none',
+          scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true }
+        });
+      }
+    });
+  }
 })();

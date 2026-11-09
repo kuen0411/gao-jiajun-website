@@ -584,11 +584,71 @@ const symbol=name=>'<svg viewBox="0 0 32 32" aria-hidden="true">'+icons[name]+'<
 function productCard(p,index){return '<a class="product-card" href="#service/'+p.id+'" data-category="'+p.filter+'" aria-label="了解'+p.name+'的用途與流程"><div class="card-art"><img src="'+CATALOG_ASSETS[p.id]+'" width="2048" height="1152" alt="'+p.alt+'" '+(index>2?'loading="lazy"':'fetchpriority="high"')+'><span class="card-number">0'+(index+1)+'</span></div><div class="card-body"><p class="card-category">'+p.category+'</p><h2>'+p.name+'</h2><p class="card-description">'+p.summary+'</p><div class="card-price">'+productPrice(p)+'<p class="price-note">'+p.note+'</p></div></div><div class="card-action">圖解用途與使用流程 <span aria-hidden="true">↗</span></div></a>'}
 $('#product-grid').innerHTML=products.map(productCard).join('');
 products.forEach(p=>{const o=document.createElement('option');o.value=p.name;o.textContent=p.name;$('#interest').append(o)});
-$$('[data-filter]').forEach(button=>button.addEventListener('click',()=>{$$('[data-filter]').forEach(b=>{const active=b===button;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active))});let count=0;$$('.product-card').forEach(c=>{c.hidden=button.dataset.filter!=='all'&&c.dataset.category!==button.dataset.filter;if(!c.hidden)count++});$('#filter-status').textContent='顯示 '+count+' 項商品與服務';}));
+const catalog = $('#catalog-view');
+const grid = $('#product-grid');
+const filters = $$('[data-filter]');
+const layouts = $$('[data-layout-choice]');
+const galleryControls = $('.catalog-controls');
+const galleryArrows = $$('[data-catalog-shift]');
+const positionLabel = $('#catalog-position');
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
+let activeCard = grid.firstElementChild;
+
+function visibleCards() {
+  return Array.from(grid.children).filter(card => !card.hidden);
+}
+
+function updateGallery() {
+  if (catalog.dataset.layout !== 'gallery' || catalog.hidden) return;
+  const cards = visibleCards();
+  if (!cards.length) return;
+  const current = cards.reduce((best, card) => {
+    return Math.abs(card.offsetLeft - grid.scrollLeft) < Math.abs(best.offsetLeft - grid.scrollLeft) ? card : best;
+  });
+  const index = cards.indexOf(current);
+  activeCard = current;
+  const label = String(index + 1).padStart(2, '0') + ' / ' + String(cards.length).padStart(2, '0');
+  if (positionLabel.textContent !== label) positionLabel.textContent = label;
+  galleryArrows[0].setAttribute('aria-disabled', String(index === 0));
+  galleryArrows[1].setAttribute('aria-disabled', String(index === cards.length - 1));
+}
+
+function alignGallery(card, animate = false) {
+  if (!card || card.hidden) return;
+  activeCard = card;
+  grid.scrollTo({ left: card.offsetLeft, behavior: animate && !reduceMotion.matches ? 'smooth' : 'instant' });
+  if (!animate || reduceMotion.matches) updateGallery();
+}
+
+function setLayout(layout) {
+  catalog.dataset.layout = layout;
+  galleryControls.hidden = layout !== 'gallery';
+  layouts.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.layoutChoice === layout)));
+  if (layout === 'gallery') alignGallery(activeCard);
+}
+
+filters.forEach(button => button.addEventListener('click', () => {
+  filters.forEach(item => item.setAttribute('aria-pressed', String(item === button)));
+  Array.from(grid.children).forEach(card => {
+    card.hidden = button.dataset.filter !== 'all' && card.dataset.category !== button.dataset.filter;
+  });
+  const cards = visibleCards();
+  $('#filter-status').textContent = '顯示 ' + cards.length + ' 項商品與服務';
+  activeCard = cards[0];
+  if (catalog.dataset.layout === 'gallery') alignGallery(activeCard);
+}));
+layouts.forEach(button => button.addEventListener('click', () => setLayout(button.dataset.layoutChoice)));
+galleryArrows.forEach(button => button.addEventListener('click', () => {
+  const cards = visibleCards();
+  alignGallery(cards[cards.indexOf(activeCard) + Number(button.dataset.catalogShift)], true);
+}));
+grid.addEventListener('scroll', updateGallery, { passive: true });
+$('.catalog-modes').hidden = false;
+setLayout('gallery');
 function flowPanel(p,index){const s=p.steps[index];return '<div><p class="eyebrow">STEP 0'+(index+1)+' ／ '+s[0]+'</p><h3 id="flow-panel-title">'+s[1]+'</h3><p>'+s[2]+'</p></div><div class="example-card"><span class="example-label">'+(p.id==='course'?'學習內容示例':'情境示例')+'</span><strong>'+s[3]+'</strong><p>'+s[4]+'</p></div>'}
 function detailMarkup(p){const index=products.indexOf(p);return '<article class="product-wrap wrap"><div class="product-breadcrumb"><a href="#">← 返回六項服務總覽</a><span aria-hidden="true">／</span><span>'+p.name+'</span></div><div class="product-hero"><div class="product-hero-art"><img src="'+CATALOG_ASSETS[p.id]+'" width="2048" height="1152" alt="'+p.alt+'"></div><div class="product-hero-copy"><p class="eyebrow">0'+(index+1)+' ／ '+p.category+'</p><h1 tabindex="-1">'+p.name+'</h1><p class="product-lead">'+p.lead+'</p><div class="product-tags">'+p.tags.map(x=>'<span>'+x+'</span>').join('')+'</div><div class="hero-price"><div>'+productPrice(p)+'<p class="price-note">'+p.note+'</p></div><button class="button primary" data-inquire="'+p.id+'">'+(p.id==='course'?'詢問課程':'詢問這項服務')+' <span aria-hidden="true">↗</span></button></div></div></div><nav class="product-nav" aria-label="'+p.name+'內容導覽">'+[['functions','用途與功能'],['flow',p.id==='course'?'學習流程':'流程說明'],['fit','適合對象'],['fees','費用與範圍'],['faq','常見問題']].map(x=>'<a href="#service/'+p.id+'/'+x[0]+'">'+x[1]+'</a>').join('')+'</nav><section class="product-section" id="functions"><div class="section-intro"><div><p class="eyebrow">WHAT IT HELPS WITH</p><h2>它可以幫你處理什麼？</h2></div><p>'+p.intro+'</p></div><div class="feature-grid">'+p.features.map(f=>'<div class="feature"><div class="feature-icon">'+symbol(f[0])+'</div><h3>'+f[1]+'</h3><p>'+f[2]+'</p></div>').join('')+'</div><div class="context-strip"><div class="context-block"><span>你可能遇過</span><p>'+p.before+'</p></div><div class="context-block"><span>希望整理成</span><p>'+p.after+'</p></div></div></section><section class="product-section" id="flow"><div class="section-intro"><div><p class="eyebrow">HOW IT WORKS</p><h2>'+p.flowTitle+'</h2></div><p>'+p.flowIntro+'</p></div><div class="flow-layout"><div class="flow-steps" role="group" aria-label="選擇流程步驟">'+p.steps.map((s,i)=>'<button class="flow-step '+(i===0?'active':'')+'" data-step="'+i+'" aria-pressed="'+(i===0)+'" aria-controls="flow-panel"><span class="step-number">0'+(i+1)+'</span><strong>'+s[0]+'</strong></button>').join('')+'</div><div class="flow-panel" id="flow-panel" role="region" aria-label="步驟內容" aria-live="polite">'+flowPanel(p,0)+'</div></div><p class="flow-caption">'+p.flowLabel+'</p></section><div class="product-section support-grid"><section class="support-block" id="fit"><h2>什麼情況適合？</h2><ul>'+p.fit.map(f=>'<li>'+f+'</li>').join('')+'</ul></section><section class="support-block" id="fees"><h2>費用與服務範圍</h2><div class="fee-box">'+productPrice(p)+'<p class="price-note">'+p.note+'</p><p>'+p.fee+'</p></div></section></div><section class="faq" id="faq"><h2 class="section-title">你可能也想知道</h2>'+p.faqs.map(f=>'<details><summary>'+f[0]+'</summary><p>'+f[1]+'</p></details>').join('')+'</section><div class="product-bottom"><p>想用在自己的工作上？可以帶著情況一起討論。</p><div><button class="button secondary" id="share-product">複製此項目連結 ⧉</button><button class="button primary" data-inquire="'+p.id+'">'+(p.id==='course'?'詢問課程安排':'整理詢問內容')+' ↗</button></div></div><p id="share-status" class="share-status" role="status" aria-live="polite"></p><div class="related-products"><span>也可以接著了解</span>'+p.related.map(id=>{const r=products.find(p=>p.id===id);return '<a href="#service/'+id+'">'+r.name+' ↗</a>'}).join('')+'</div></article>'}
 let currentProduct=null;let catalogScroll=0;
-function renderRoute(){const parts=location.hash.slice(1).split('/');const p=parts[0]==='service'?products.find(p=>p.id===parts[1]):null;const oldId=currentProduct?.id;const isCatalog=!$('#catalog-view').hidden;if(p){if(isCatalog)catalogScroll=window.scrollY;$('#catalog-view').hidden=true;$('#product-view').hidden=false;if(oldId!==p.id){$('#product-view').innerHTML=detailMarkup(p);$$('[data-step]').forEach(button=>button.addEventListener('click',()=>{$$('[data-step]').forEach(b=>{const active=b===button;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active))});$('#flow-panel').innerHTML=flowPanel(p,Number(button.dataset.step));}));if(location.protocol==='file:')$('#share-product').textContent='複製此項目介紹 ⧉';$('#share-product').addEventListener('click',async()=>{const local=location.protocol==='file:';const text=local?p.name+'\n'+p.summary+'\n'+(p.prefix?p.prefix+' ':'')+p.price+(p.unit||'')+'\n'+p.note:location.href.split('#')[0]+'#service/'+p.id;const ok=await copyText(text);$('#share-status').textContent=ok?(local?'項目介紹已複製。':'服務連結已複製。'):'目前無法自動複製，請手動複製內容。'});}currentProduct=p;document.title=p.name+'｜商品與服務型錄';if(parts[2]&&['functions','flow','fit','fees','faq'].includes(parts[2])){requestAnimationFrame(()=>document.getElementById(parts[2])?.scrollIntoView({behavior:'instant'}));}else if(oldId!==p.id){window.scrollTo({top:0,behavior:'instant'});$('#product-view h1').focus({preventScroll:true});}}else{currentProduct=null;$('#catalog-view').hidden=false;$('#product-view').hidden=true;document.title='商品與服務型錄｜高嘉駿';if(oldId){window.scrollTo({top:catalogScroll,behavior:'instant'});$('#product-grid a[href="#service/'+oldId+'"]').focus({preventScroll:true});}else if(!location.hash||location.hash==='#'){window.scrollTo({top:0,behavior:'instant'});}}}
+function renderRoute(){const parts=location.hash.slice(1).split('/');const p=parts[0]==='service'?products.find(p=>p.id===parts[1]):null;const oldId=currentProduct?.id;const isCatalog=!$('#catalog-view').hidden;if(p){if(isCatalog)catalogScroll=window.scrollY;$('#catalog-view').hidden=true;$('#product-view').hidden=false;if(oldId!==p.id){$('#product-view').innerHTML=detailMarkup(p);$$('[data-step]').forEach(button=>button.addEventListener('click',()=>{$$('[data-step]').forEach(b=>{const active=b===button;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active))});$('#flow-panel').innerHTML=flowPanel(p,Number(button.dataset.step));}));if(location.protocol==='file:')$('#share-product').textContent='複製此項目介紹 ⧉';$('#share-product').addEventListener('click',async()=>{const local=location.protocol==='file:';const text=local?p.name+'\n'+p.summary+'\n'+(p.prefix?p.prefix+' ':'')+p.price+(p.unit||'')+'\n'+p.note:location.href.split('#')[0]+'#service/'+p.id;const ok=await copyText(text);$('#share-status').textContent=ok?(local?'項目介紹已複製。':'服務連結已複製。'):'目前無法自動複製，請手動複製內容。'});}currentProduct=p;document.title=p.name+'｜商品與服務型錄';if(parts[2]&&['functions','flow','fit','fees','faq'].includes(parts[2])){requestAnimationFrame(()=>document.getElementById(parts[2])?.scrollIntoView({behavior:'instant'}));}else if(oldId!==p.id){window.scrollTo({top:0,behavior:'instant'});$('#product-view h1').focus({preventScroll:true});}}else{currentProduct=null;$('#catalog-view').hidden=false;$('#product-view').hidden=true;document.title='商品與服務型錄｜高嘉駿';if(oldId){window.scrollTo({top:catalogScroll,behavior:'instant'});const returnCard=$('#product-grid a[href="#service/'+oldId+'"]');if(catalog.dataset.layout==='gallery')alignGallery(returnCard);returnCard?.focus({preventScroll:true});}else if(!location.hash||location.hash==='#'){window.scrollTo({top:0,behavior:'instant'});}}}
 window.addEventListener('hashchange',renderRoute);renderRoute();
 const dialog=$('#inquiry-dialog');let returnFocus=null;
 document.addEventListener('click',event=>{const button=event.target.closest('[data-inquire]');if(!button)return;returnFocus=button;const p=products.find(p=>p.id===button.dataset.inquire)||currentProduct;$('#interest').value=p?p.name:'還不確定，想先討論';$('.copy-status').textContent='';$('#manual-copy')?.remove();dialog.showModal();document.body.classList.add('dialog-open');});
