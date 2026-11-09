@@ -68,7 +68,6 @@
     const project = link.closest('.project');
     const transcript = document.getElementById('case-' + link.dataset.case);
     const source = $('img', link);
-    const sourceBox = link.getBoundingClientRect();
     const media = $('.case-dialog-media');
     const image = $('img', media);
 
@@ -83,20 +82,9 @@
     caseDialog.scrollTop = 0;
 
     if (motion && !reduced.matches) {
-      const destination = media.getBoundingClientRect();
-      caseAnimation = motion.timeline();
-      caseAnimation.fromTo(media, {
-        x: sourceBox.left - destination.left,
-        y: sourceBox.top - destination.top,
-        scaleX: sourceBox.width / destination.width,
-        scaleY: sourceBox.height / destination.height,
-        borderRadius: 16
-      }, {
-        x: 0, y: 0, scaleX: 1, scaleY: 1, borderRadius: 0, duration: .62, ease: 'power3.inOut',
-        clearProps: 'transform,borderRadius'
-      }).fromTo('.case-dialog-text', { y: 18, opacity: .4 }, {
-        y: 0, opacity: 1, duration: .38, clearProps: 'transform,opacity'
-      }, .32);
+      caseAnimation = motion.fromTo(caseDialog, { y: 14, scale: .97, opacity: .7 }, {
+        y: 0, scale: 1, opacity: 1, duration: .32, ease: 'power2.out', clearProps: 'transform,opacity'
+      });
     }
   }
 
@@ -146,6 +134,33 @@
   $('.gallery-modes', exhibit).hidden = false;
   setView('gallery');
 
+  let hoveredMethod;
+  $$('.method-step').forEach(step => {
+    const trigger = $('summary', step);
+    trigger.addEventListener('pointerenter', event => {
+      if (event.pointerType !== 'mouse' || step.open) return;
+      step.open = true;
+      hoveredMethod = step;
+    });
+    step.addEventListener('pointerleave', () => {
+      if (hoveredMethod !== step) return;
+      step.open = false;
+      hoveredMethod = undefined;
+    });
+    trigger.addEventListener('click', event => {
+      if (hoveredMethod !== step) return;
+      hoveredMethod = undefined;
+      if (event.detail > 0 && step.open) event.preventDefault();
+    });
+  });
+  document.addEventListener('keydown', event => {
+    if (event.key !== 'Escape' || $('dialog[open]')) return;
+    const step = hoveredMethod?.open ? hoveredMethod : event.target.closest('.method-step[open]');
+    if (!step) return;
+    step.open = false;
+    hoveredMethod = undefined;
+  });
+
   function focusContact() {
     $('#contact-title').focus({ preventScroll: true });
     $('#contact').scrollIntoView({ behavior: reduced.matches ? 'instant' : 'smooth' });
@@ -156,6 +171,12 @@
     caseAnimation = undefined;
     returnFocus?.focus({ preventScroll: true });
     returnFocus = undefined;
+  });
+  caseDialog.addEventListener('click', event => {
+    if (event.target !== caseDialog) return;
+    const bounds = caseDialog.getBoundingClientRect();
+    if (event.clientX < bounds.left || event.clientX > bounds.right ||
+        event.clientY < bounds.top || event.clientY > bounds.bottom) caseDialog.close();
   });
   $('#case-contact').addEventListener('click', event => {
     event.preventDefault();
