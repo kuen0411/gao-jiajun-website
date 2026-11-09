@@ -134,6 +134,33 @@
   $('.gallery-modes', exhibit).hidden = false;
   setView('gallery');
 
+  let hoveredMethod;
+  $$('.method-step').forEach(step => {
+    const trigger = $('summary', step);
+    trigger.addEventListener('pointerenter', event => {
+      if (event.pointerType !== 'mouse' || step.open) return;
+      step.open = true;
+      hoveredMethod = step;
+    });
+    step.addEventListener('pointerleave', () => {
+      if (hoveredMethod !== step) return;
+      step.open = false;
+      hoveredMethod = undefined;
+    });
+    trigger.addEventListener('click', event => {
+      if (hoveredMethod !== step) return;
+      hoveredMethod = undefined;
+      if (event.detail > 0 && step.open) event.preventDefault();
+    });
+  });
+  document.addEventListener('keydown', event => {
+    if (event.key !== 'Escape' || $('dialog[open]')) return;
+    const step = hoveredMethod?.open ? hoveredMethod : event.target.closest('.method-step[open]');
+    if (!step) return;
+    step.open = false;
+    hoveredMethod = undefined;
+  });
+
   function focusContact() {
     $('#contact-title').focus({ preventScroll: true });
     $('#contact').scrollIntoView({ behavior: reduced.matches ? 'instant' : 'smooth' });

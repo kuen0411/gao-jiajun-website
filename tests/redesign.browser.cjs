@@ -110,6 +110,31 @@ async function run() {
     await page.locator('[data-view-choice="gallery"]').click();
     assert.equal(await page.locator('.project.is-current').getAttribute('data-project'), 'commerce');
 
+    const method = page.locator('.method-step');
+    await method.nth(0).locator('summary').hover();
+    assert.equal(await method.nth(0).evaluate(step => step.open), true);
+    await method.nth(0).locator('.method-note p').hover();
+    assert.equal(await method.nth(0).evaluate(step => step.open), true);
+    await method.nth(1).locator('summary').hover();
+    assert.equal(await method.nth(0).evaluate(step => step.open), false);
+    assert.equal(await method.nth(1).evaluate(step => step.open), true);
+    await page.keyboard.press('Escape');
+    assert.equal(await method.nth(1).evaluate(step => step.open), false);
+    await method.nth(2).locator('summary').press('Enter');
+    assert.equal(await method.nth(2).evaluate(step => step.open), true);
+    await page.keyboard.press('Escape');
+    assert.equal(await method.nth(2).evaluate(step => step.open), false);
+
+    await page.setViewportSize({ width: 707, height: 892 });
+    await page.goto(home);
+    await page.locator('[data-case="argo"]').click();
+    assert.ok(await page.locator('.case-dialog-media img').evaluate(async image => {
+      await image.decode();
+      const rect = image.getBoundingClientRect();
+      return Math.abs(rect.width / rect.height - image.naturalWidth / image.naturalHeight) < .01;
+    }));
+    await page.keyboard.press('Escape');
+
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto(home);
     await screenshot(page, 'home-mobile');
@@ -237,6 +262,14 @@ async function run() {
     assert.ok(card.x >= 12 && card.y >= 12 && card.x + card.width <= 363 && card.y + card.height <= 800);
     await mobileCase.getByRole('button', { name: '關閉案例' }).tap();
     await mobileCase.waitFor({ state: 'hidden' });
+    const phoneSteps = phone.locator('.method-step');
+    await phoneSteps.nth(0).locator('summary').tap();
+    assert.equal(await phoneSteps.nth(0).evaluate(step => step.open), true);
+    await phoneSteps.nth(1).locator('summary').tap();
+    assert.equal(await phoneSteps.nth(0).evaluate(step => step.open), false);
+    assert.equal(await phoneSteps.nth(1).evaluate(step => step.open), true);
+    await phoneSteps.nth(1).locator('summary').tap();
+    assert.equal(await phoneSteps.nth(1).evaluate(step => step.open), false);
 
     await page.emulateMedia({ reducedMotion: 'no-preference' });
     await page.setViewportSize({ width: 1440, height: 900 });
