@@ -231,6 +231,12 @@ async function run() {
     }
     await session.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
     await phone.waitForFunction(() => document.querySelector('.project.is-current').dataset.project === 'commerce');
+    const mobileCase = phone.locator('.case-dialog');
+    await phone.locator('.project.is-current .project-open').tap();
+    const card = await mobileCase.boundingBox();
+    assert.ok(card.x >= 12 && card.y >= 12 && card.x + card.width <= 363 && card.y + card.height <= 800);
+    await mobileCase.getByRole('button', { name: '關閉案例' }).tap();
+    await mobileCase.waitFor({ state: 'hidden' });
 
     await page.emulateMedia({ reducedMotion: 'no-preference' });
     await page.setViewportSize({ width: 1440, height: 900 });
@@ -238,10 +244,12 @@ async function run() {
     assert.equal(await page.evaluate(() => ScrollTrigger.getAll().length), 1);
     await page.locator('[data-case="argo"]').click();
     assert.equal(await page.locator('.case-dialog').evaluate(dialog => dialog.open), true);
-    await page.waitForFunction(() => document.querySelector('.case-dialog-media').style.transform !== '');
-    await page.waitForFunction(() => document.querySelector('.case-dialog-media').style.transform === '');
+    await page.waitForFunction(() => document.querySelector('.case-dialog').style.transform !== '');
+    await page.waitForFunction(() => document.querySelector('.case-dialog').style.transform === '');
     await screenshot(page, 'home-case');
-    await page.locator('.case-dialog .dialog-close').click();
+    await page.mouse.click(12, 12);
+    await page.locator('.case-dialog').waitFor({ state: 'hidden' });
+    await page.waitForFunction(() => document.querySelector('[data-case="argo"]') === document.activeElement);
 
     const noJs = await browser.newContext({ javaScriptEnabled: false });
     const fallback = await noJs.newPage();
